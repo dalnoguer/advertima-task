@@ -113,6 +113,7 @@ def detect_objects(root_dir, target_dir, frame_ext, classifier_path):
 
 if __name__ == '__main__':
     root_dir, target_dir, frame_ext, classifier_path = parse_arguments()
-    shutil.rmtree(target_dir)
+    if os.path.isdir(target_dir):
+        shutil.rmtree(target_dir)
     os.mkdir(target_dir)
     detect_objects(root_dir, target_dir, frame_ext, classifier_path)

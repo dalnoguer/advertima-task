@@ -57,11 +57,11 @@ def train():
         logits_test = networks.wide_resnet(x_test, is_training=True)
 
     # Configure saver
-    os.mkdir(os.path.join("/home/dal/dev/advertima/models", MODEL_NAME))
+    os.mkdir(os.path.join("./models", MODEL_NAME))
     saver = tf.train.Saver()
-    train_logger = open('models/{}/train.txt'.format(MODEL_NAME), 'w')
-    validation_logger = open('models/{}/validation.txt'.format(MODEL_NAME), 'w')
-    accuracy_logger = open('models/{}/accuracy.txt'.format(MODEL_NAME), 'w')
+    train_logger = open('./models/{}/train.txt'.format(MODEL_NAME), 'w')
+    validation_logger = open('./models/{}/validation.txt'.format(MODEL_NAME), 'w')
+    accuracy_logger = open('./models/{}/accuracy.txt'.format(MODEL_NAME), 'w')
 
     """
     total_parameters = 0
