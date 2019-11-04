@@ -1,0 +1,5 @@
+0.9164
+
+5 EPOCHS
+WRN-18
+NO AUG
