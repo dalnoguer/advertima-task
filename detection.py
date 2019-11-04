@@ -10,10 +10,10 @@ import shutil
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--root_dir", help="Directory containing frames.", type=str)
-    parser.add_argument("--target_dir", help="Directory containing frames.", type=str)
-    parser.add_argument("--frame_ext", help="Frame extension.", type=str)
-    parser.add_argument("--model_path", help="Path to the pretrained classifier model", type=str)
+    parser.add_argument("--root_dir", help="Directory containing frames.", type=str, required=True)
+    parser.add_argument("--target_dir", help="Directory containing frames.", type=str, required=True)
+    parser.add_argument("--frame_ext", help="Frame extension.", type=str, required=True)
+    parser.add_argument("--model_path", help="Path to the pretrained classifier model", type=str, required=True)
     args = parser.parse_args()
 
     return args.root_dir, args.target_dir, args.frame_ext, args.model_path
