@@ -10,13 +10,12 @@ import shutil
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--root_dir", help="Directory containing frames.", type=str, required=True)
-    parser.add_argument("--target_dir", help="Directory containing frames.", type=str, required=True)
-    parser.add_argument("--frame_ext", help="Frame extension.", type=str, required=True)
-    parser.add_argument("--model_path", help="Path to the pretrained classifier model", type=str, required=True)
+    parser.add_argument("--video_path", help="Path to video file.", type=str)
+    parser.add_argument("--video_target_path", help="Path to output video file.", type=str)
+    parser.add_argument("--model_path", help="Path to the pretrained classifier model", type=str)
     args = parser.parse_args()
 
-    return args.root_dir, args.target_dir, args.frame_ext, args.model_path
+    return args.video_path, args.video_target_path, args.model_path
 
 
 def resize_image(image, target_shape):
@@ -36,13 +35,12 @@ def resize_image(image, target_shape):
         else:
             image = np.pad(image, ((pad + 1, pad), (0, 0)))
 
-    image = cv2.resize(image, dsize=(28, 28), interpolation=cv2.INTER_LINEAR)
+    image = cv2.resize(image, dsize=(target_shape, target_shape), interpolation=cv2.INTER_LINEAR)
 
     return image
 
 
-def detect_objects(root_dir, target_dir, frame_ext, classifier_path):
-    frames = glob.glob(os.path.join(root_dir, '*.' + frame_ext))
+def detect_objects(video_path, video_target_path, classifier_path):
 
     classification_threshold = 0.55
     id_to_class = {
@@ -68,11 +66,15 @@ def detect_objects(root_dir, target_dir, frame_ext, classifier_path):
         saver = tf.train.Saver()
         saver.restore(session, classifier_path)
 
-        for frame in frames:
+        cap = cv2.VideoCapture(video_path)
+        out = cv2.VideoWriter(video_target_path, cv2.VideoWriter_fourcc(*"MJPG"), 20, (640, 480))
+        while cap.isOpened():
+            ret, frame = cap.read()
 
-            image = cv2.imread(filename=frame)
-            image_gray = cv2.cvtColor(src=image, code=cv2.COLOR_BGR2GRAY)
-            #(t, image_gray) = cv2.threshold(src=image_gray, thresh=200, maxval=255, type=cv2.THRESH_BINARY)
+            if not ret:
+                break
+
+            image_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             (contours, _) = cv2.findContours(image=image_gray,
                                              mode=cv2.RETR_EXTERNAL,
                                              method=cv2.CHAIN_APPROX_SIMPLE)
@@ -98,22 +100,22 @@ def detect_objects(root_dir, target_dir, frame_ext, classifier_path):
 
                 if class_id != -1:
                     txt = id_to_class[class_id] + ' ' + "{:.0f}%".format(np.max(class_prob)*100)
-                    cv2.putText(image, txt, (bb[0], bb[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.25,
+                    cv2.putText(frame, txt, (bb[0], bb[1]), cv2.FONT_HERSHEY_SIMPLEX, 0.25,
                                 (255, 255, 255))
-                    cv2.rectangle(img=image,
+                    cv2.rectangle(img=frame,
                                   pt1=(bb[0], bb[1]),
                                   pt2=(bb[0] + bb[2], bb[1] + bb[3]),
                                   color=(255, 255, 255),
                                   thickness=1)
 
-            frame_id = os.path.splitext(os.path.basename(frame))[0]
-            target_path = os.path.join(target_dir, frame_id + "out.png")
-            cv2.imwrite(target_path, image)
+            out.write(frame)
+
+        # Release everything if job is finished
+        out.release()
+        cv2.destroyAllWindows()
 
 
 if __name__ == '__main__':
-    root_dir, target_dir, frame_ext, classifier_path = parse_arguments()
-    if os.path.isdir(target_dir):
-        shutil.rmtree(target_dir)
-    os.mkdir(target_dir)
-    detect_objects(root_dir, target_dir, frame_ext, classifier_path)
+
+    video_path, video_target_path, classifier_path = parse_arguments()
+    detect_objects(video_path, video_target_path, classifier_path)
